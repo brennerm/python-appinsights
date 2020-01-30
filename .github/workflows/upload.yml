@@ -23,7 +23,7 @@ jobs:
         pip install twine
     - name: Upload to pypi
       run: |
-        twine upload
+        twine upload dist/*
       env:
         TWINE_USERNAME: brennerm
         TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
