@@ -1,0 +1,29 @@
+on:
+  push:
+    tags:
+    - '*'
+
+jobs:
+  deploy-gh-pages:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        persist-credentials: false
+    - name: Set up Python 3.6
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.6
+    - name: Build sdist
+      run: python setup.py sdist
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install twine
+    - name: Upload to pypi
+      run: |
+        twine upload
+      env:
+        TWINE_USERNAME: brennerm
+        TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
