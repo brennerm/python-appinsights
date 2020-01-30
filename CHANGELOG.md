@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.11.13
+- Fix envelope type name of AvailabilityData
+
 ## 0.11.12
 - Fix duration format for AvailabilityData
 
