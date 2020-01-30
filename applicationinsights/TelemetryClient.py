@@ -269,7 +269,7 @@ class TelemetryClient(object):
         availability_data = channel.contracts.AvailabilityData()
         availability_data.id = availability_id or str(uuid.uuid4())
         availability_data.name = name
-        availability_data.duration = duration
+        availability_data.duration = self.__ms_to_duration(duration)
         availability_data.success = success
         availability_data.run_location = run_location
         availability_data.message = message
