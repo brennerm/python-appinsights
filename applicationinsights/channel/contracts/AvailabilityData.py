@@ -6,7 +6,7 @@ from .Utils import _write_complex_object
 class AvailabilityData(object):
     """Data contract class for type AvailabilityData.
     """
-    ENVELOPE_TYPE_NAME = 'Microsoft.ApplicationInsights.Availablility'
+    ENVELOPE_TYPE_NAME = 'Microsoft.ApplicationInsights.Availability'
 
     DATA_TYPE_NAME = 'AvailabilityData'
 
