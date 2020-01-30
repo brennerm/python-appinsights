@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.11.12
+- Fix duration format for AvailabilityData
+
 ## 0.11.11
 - Fix syntax error
 
