@@ -4,7 +4,7 @@ on:
     - '*'
 
 jobs:
-  deploy-gh-pages:
+  deploy-to-pypi:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
@@ -15,8 +15,8 @@ jobs:
       uses: actions/setup-python@v1
       with:
         python-version: 3.6
-    - name: Build sdist
-      run: python setup.py sdist
+    - name: Execute tests and build sdist
+      run: python setup.py test sdist
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
