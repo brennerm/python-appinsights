@@ -16,7 +16,7 @@ succeeding. This Python module will allow you to send telemetry of various kinds
 (event, trace, exception, etc.) to the Application Insights service where they
 can be visualized in the Azure Portal. A link to the Application Insights API
 documentation can be found `here
-<https://microsoft.github.io/ApplicationInsights-Python/>`_.
+<https://brennerm.github.io/python-appinsights/>`_.
 
 This project is not officially supported and not recommended for high load
 production use. The project is open source and welcomes contributions.
@@ -38,7 +38,7 @@ To install the latest release you can use `pip <http://www.pip-installer.org/>`_
 Documentation
 -------------
 
-Please see https://microsoft.github.io/ApplicationInsights-Python/ for full documentation.
+Please see https://brennerm.github.io/python-appinsights/ for full documentation.
 
 Usage
 -----
@@ -398,7 +398,7 @@ for more information.
 **Integrating with other web frameworks**
 
 For any other Python web framework that is `WSGI compliant <https://www.python.org/dev/peps/pep-0333/>`_,
-the `WSGIApplication <https://github.com/Microsoft/ApplicationInsights-Python/blob/master/applicationinsights/requests/WSGIApplication.py>`_
+the `WSGIApplication <https://github.com/brennerm/python-appinsights/blob/master/applicationinsights/requests/WSGIApplication.py>`_
 can be used as a middleware to log requests to Application Insights.
 
 Add common properties to WSGIApplication request events by passing in a dictionary to the WSGIApplication constructor:
