@@ -119,6 +119,14 @@
         <span class="c1"># operation.parent_id ought to be the request id (not the operation id, but we don&#39;t have it yet)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">operation</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">http_method</span> <span class="o">+</span> <span class="s1">&#39; &#39;</span> <span class="o">+</span> <span class="n">name</span>
 
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">location</span><span class="o">.</span><span class="n">ip</span> <span class="o">=</span> <span class="n">environ</span><span class="p">[</span><span class="s1">&#39;HTTP_X_FORWARDED_FOR&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">location</span><span class="o">.</span><span class="n">ip</span> <span class="o">=</span> <span class="n">environ</span><span class="p">[</span><span class="s1">&#39;REMOTE_ADDR&#39;</span><span class="p">]</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="k">pass</span>
+
         <span class="k">def</span> <span class="nf">status_interceptor</span><span class="p">(</span><span class="n">status_string</span><span class="p">,</span> <span class="n">headers_array</span><span class="p">,</span> <span class="n">exc_info</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
             <span class="n">closure</span><span class="p">[</span><span class="s1">&#39;status&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">status_string</span>
             <span class="n">start_response</span><span class="p">(</span><span class="n">status_string</span><span class="p">,</span> <span class="n">headers_array</span><span class="p">,</span> <span class="n">exc_info</span><span class="p">)</span>
