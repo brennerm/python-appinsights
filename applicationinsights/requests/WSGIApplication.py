@@ -80,6 +80,14 @@ class WSGIApplication(object):
         # operation.parent_id ought to be the request id (not the operation id, but we don't have it yet)
         self.client.context.operation.name = http_method + ' ' + name
 
+        try:
+            self.client.context.location.ip = environ['HTTP_X_FORWARDED_FOR'].split(',')[-1].strip()
+        except KeyError:
+            try:
+                self.client.context.location.ip = environ['REMOTE_ADDR']
+            except KeyError:
+                pass
+
         def status_interceptor(status_string, headers_array, exc_info=None):
             closure['status'] = status_string
             start_response(status_string, headers_array, exc_info)

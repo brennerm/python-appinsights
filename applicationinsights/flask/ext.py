@@ -1,4 +1,5 @@
 from os import getenv
+import platform
 
 try:
     from werkzeug.exceptions import HTTPException
@@ -102,6 +103,9 @@ class AppInsights(object):
 
         queue = AsynchronousQueue(sender)
         self._channel = TelemetryChannel(None, queue)
+
+        self.context.cloud.role = app.name
+        self.context.cloud.role_instance = platform.node()
 
         self._init_request_logging(app)
         self._init_trace_logging(app)

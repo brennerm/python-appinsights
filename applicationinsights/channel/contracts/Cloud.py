@@ -42,27 +42,6 @@ class Cloud(object):
             self._values['ai.cloud.role'] = value
 
     @property
-    def role_name(self):
-        """The role_name property.
-        Returns:
-            (string). the property value. (defaults to: None)
-        """
-        if 'ai.cloud.roleName' in self._values:
-            return self._values['ai.cloud.roleName']
-        return self._defaults['ai.cloud.roleName']
-
-    @role_name.setter
-    def role_name(self, value):
-        """ The role_name property.
-        Args:
-            value (string). the property value
-        """
-        if value == self._defaults['ai.cloud.roleName'] and 'ai.cloud.roleName' in self._values:
-            del self._values['ai.cloud.roleName']
-        else:
-            self._values['ai.cloud.roleName'] = value
-
-    @property
     def role_instance(self):
         """The role_instance property.
 
