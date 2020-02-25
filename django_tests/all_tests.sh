@@ -7,15 +7,17 @@ fi
 cd $(dirname $0)
 BASEDIR=$(pwd)
 
-# Django/python compatibility matrix...
+# Django/python compatibility matrix https://docs.djangoproject.com/en/dev/faq/install/#what-python-version-can-i-use-with-django
 if $PYTHON -c "import sys; sys.exit(0 if sys.version_info < (3, 0) else 1)"; then
 	# Django2.0 won't support Python2
 	DJANGO_VERSIONS='1.7.11 1.8.19 1.9.13 1.10.8 1.11.13'
 elif $PYTHON -c "import sys; sys.exit(0 if sys.version_info < (3, 5) else 1)"; then
-	DJANGO_VERSIONS='1.7.11 1.8.19 1.9.13 1.10.8 1.11.13 2.0.6'
-else
+	DJANGO_VERSIONS='1.7.11 1.8.19 1.9.13 1.10.8 1.11.28 2.0.13'
+elif $PYTHON -c "import sys; sys.exit(0 if sys.version_info < (3, 8) else 1)"; then
 	# python3.5 dropped html.parser.HtmlParserError versions older than Django1.8 won't work
-	DJANGO_VERSIONS='1.8.19 1.9.13 1.10.8 1.11.13 2.0.6'
+	DJANGO_VERSIONS='1.8.19 1.9.13 1.10.8 1.11.28 2.0.13 2.1.15 2.2.10'
+else
+	DJANGO_VERSIONS='2.2.10 3.0.3'
 fi
 
 # For each Django version...
