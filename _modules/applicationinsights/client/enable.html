@@ -1,0 +1,300 @@
+
+
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>applicationinsights.client.enable &#8212; Application Insights SDK for Python 0.12.0 documentation</title>
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/overrides.css" type="text/css" />
+    
+    <script id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/language_data.js"></script>
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Application Insights SDK for Python 0.12.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for applicationinsights.client.enable</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">sys</span>
+
+<span class="kn">from</span> <span class="nn">applicationinsights</span> <span class="kn">import</span> <span class="n">TelemetryClient</span>
+<span class="kn">from</span> <span class="nn">applicationinsights.channel</span> <span class="kn">import</span> <span class="n">SynchronousSender</span><span class="p">,</span> <span class="n">SynchronousQueue</span><span class="p">,</span> <span class="n">TelemetryChannel</span>
+
+<span class="kn">import</span> <span class="nn">time</span>
+
+<span class="n">current_milli_time</span> <span class="o">=</span> <span class="k">lambda</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">*</span> <span class="mi">1000</span><span class="p">))</span>
+
+
+<span class="k">def</span> <span class="nf">_track_dependency</span><span class="p">(</span><span class="n">tc</span><span class="p">,</span> <span class="n">always_flush</span><span class="p">,</span> <span class="n">host</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">duration</span><span class="p">,</span> <span class="n">response_code</span><span class="p">):</span>
+    <span class="n">success</span> <span class="o">=</span> <span class="n">response_code</span> <span class="o">&lt;</span> <span class="mi">400</span>
+
+    <span class="n">tc</span><span class="o">.</span><span class="n">track_dependency</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="n">host</span><span class="p">,</span>
+        <span class="n">data</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="n">url</span><span class="p">),</span>
+        <span class="n">target</span><span class="o">=</span><span class="n">url</span><span class="p">,</span>
+        <span class="n">duration</span><span class="o">=</span><span class="n">duration</span><span class="p">,</span>
+        <span class="n">success</span><span class="o">=</span><span class="n">success</span><span class="p">,</span>
+        <span class="n">result_code</span><span class="o">=</span><span class="n">response_code</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">always_flush</span><span class="p">:</span>
+        <span class="n">tc</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+
+<span class="k">def</span> <span class="nf">__enable_for_urllib3</span><span class="p">(</span><span class="n">http_connection_pool_class</span><span class="p">,</span> <span class="n">https_connection_pool_class</span><span class="p">,</span> <span class="n">instrumentation_key</span><span class="p">,</span>
+                         <span class="n">telemetry_channel</span><span class="p">,</span> <span class="n">always_flush</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">instrumentation_key</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;Instrumentation key was required but not provided&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">telemetry_channel</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">sender</span> <span class="o">=</span> <span class="n">SynchronousSender</span><span class="p">()</span>
+        <span class="n">queue</span> <span class="o">=</span> <span class="n">SynchronousQueue</span><span class="p">(</span><span class="n">sender</span><span class="p">)</span>
+        <span class="n">telemetry_channel</span> <span class="o">=</span> <span class="n">TelemetryChannel</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">queue</span><span class="p">)</span>
+
+    <span class="n">client</span> <span class="o">=</span> <span class="n">TelemetryClient</span><span class="p">(</span><span class="n">instrumentation_key</span><span class="p">,</span> <span class="n">telemetry_channel</span><span class="p">)</span>
+
+    <span class="n">orig_http_urlopen_method</span> <span class="o">=</span> <span class="n">http_connection_pool_class</span><span class="o">.</span><span class="n">urlopen</span>
+    <span class="n">orig_https_urlopen_method</span> <span class="o">=</span> <span class="n">https_connection_pool_class</span><span class="o">.</span><span class="n">urlopen</span>
+
+    <span class="k">def</span> <span class="nf">custom_urlopen_wrapper</span><span class="p">(</span><span class="n">urlopen_func</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">custom_urlopen</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+            <span class="n">start_time</span> <span class="o">=</span> <span class="n">current_milli_time</span><span class="p">()</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="n">urlopen_func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>  <span class="c1"># make sure to always return the response</span>
+                <span class="n">duration</span> <span class="o">=</span> <span class="n">current_milli_time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">method</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+                    <span class="n">method</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;method&#39;</span><span class="p">]</span>
+
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">url</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+                <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+                    <span class="n">url</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;url&#39;</span><span class="p">]</span>
+
+                <span class="n">_track_dependency</span><span class="p">(</span><span class="n">client</span><span class="p">,</span> <span class="n">always_flush</span><span class="p">,</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">host</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">duration</span><span class="p">,</span> <span class="n">response</span><span class="o">.</span><span class="n">status</span><span class="p">)</span>
+            <span class="k">finally</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">response</span>
+
+        <span class="k">return</span> <span class="n">custom_urlopen</span>
+
+    <span class="n">http_connection_pool_class</span><span class="o">.</span><span class="n">urlopen</span> <span class="o">=</span> <span class="n">custom_urlopen_wrapper</span><span class="p">(</span><span class="n">orig_http_urlopen_method</span><span class="p">)</span>
+    <span class="n">https_connection_pool_class</span><span class="o">.</span><span class="n">urlopen</span> <span class="o">=</span> <span class="n">custom_urlopen_wrapper</span><span class="p">(</span><span class="n">orig_https_urlopen_method</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="enable_for_urllib3"><a class="viewcode-back" href="../../../applicationinsights.client.html#applicationinsights.client.enable_for_urllib3">[docs]</a><span class="k">def</span> <span class="nf">enable_for_urllib3</span><span class="p">(</span><span class="n">instrumentation_key</span><span class="p">,</span> <span class="n">telemetry_channel</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">always_flush</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Enables the automatic collection of dependency telemetries for HTTP calls with urllib3.</span>
+
+<span class="sd">    .. code:: python</span>
+
+<span class="sd">        from applicationinsights.client import enable_for_urllib3</span>
+<span class="sd">        import urllib3.requests</span>
+
+<span class="sd">        enable_for_urllib3(&#39;&lt;YOUR INSTRUMENTATION KEY GOES HERE&gt;&#39;)</span>
+
+<span class="sd">        urllib3.PoolManager().request(&quot;GET&quot;, &quot;https://www.python.org/&quot;)</span>
+<span class="sd">        # a dependency telemetry will be sent to the Application Insights service</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        instrumentation_key (str). the instrumentation key to use while sending telemetry to the service.</span>
+<span class="sd">        telemetry_channel (TelemetryChannel). a custom telemetry channel to use</span>
+<span class="sd">        always_flush (bool). if true every HTTP call will flush the dependency telemetry</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">urllib3.connectionpool</span> <span class="kn">import</span> <span class="n">HTTPConnectionPool</span><span class="p">,</span> <span class="n">HTTPSConnectionPool</span>
+    <span class="n">__enable_for_urllib3</span><span class="p">(</span><span class="n">HTTPConnectionPool</span><span class="p">,</span> <span class="n">HTTPSConnectionPool</span><span class="p">,</span> <span class="n">instrumentation_key</span><span class="p">,</span> <span class="n">telemetry_channel</span><span class="p">,</span> <span class="n">always_flush</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="enable_for_requests"><a class="viewcode-back" href="../../../applicationinsights.client.html#applicationinsights.client.enable_for_requests">[docs]</a><span class="k">def</span> <span class="nf">enable_for_requests</span><span class="p">(</span><span class="n">instrumentation_key</span><span class="p">,</span> <span class="n">telemetry_channel</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">always_flush</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Enables the automatic collection of dependency telemetries for HTTP calls with requests.</span>
+
+<span class="sd">    .. code:: python</span>
+
+<span class="sd">        from applicationinsights.client import enable_for_requests</span>
+<span class="sd">        import requests</span>
+
+<span class="sd">        enable_for_requests(&#39;&lt;YOUR INSTRUMENTATION KEY GOES HERE&gt;&#39;)</span>
+
+<span class="sd">        requests.get(&quot;https://www.python.org/&quot;)</span>
+<span class="sd">        # a dependency telemetry will be sent to the Application Insights service</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        instrumentation_key (str). the instrumentation key to use while sending telemetry to the service.</span>
+<span class="sd">        telemetry_channel (TelemetryChannel). a custom telemetry channel to use</span>
+<span class="sd">        always_flush (bool). if true every HTTP call will flush the dependency telemetry</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">requests.packages.urllib3.connectionpool</span> <span class="kn">import</span> <span class="n">HTTPConnectionPool</span><span class="p">,</span> <span class="n">HTTPSConnectionPool</span>
+    <span class="n">__enable_for_urllib3</span><span class="p">(</span><span class="n">HTTPConnectionPool</span><span class="p">,</span> <span class="n">HTTPSConnectionPool</span><span class="p">,</span> <span class="n">instrumentation_key</span><span class="p">,</span> <span class="n">telemetry_channel</span><span class="p">,</span> <span class="n">always_flush</span><span class="p">)</span></div>
+
+
+<span class="k">def</span> <span class="nf">_track_for_urllib</span><span class="p">(</span><span class="n">tc</span><span class="p">,</span> <span class="n">always_flush</span><span class="p">,</span> <span class="n">start_time</span><span class="p">,</span> <span class="n">req</span><span class="p">,</span> <span class="n">resp</span><span class="p">):</span>
+    <span class="n">duration</span> <span class="o">=</span> <span class="n">current_milli_time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span>
+    <span class="n">method</span> <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="n">get_method</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span><span class="o">.</span><span class="n">major</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="n">selector</span>
+        <span class="n">status</span> <span class="o">=</span> <span class="n">resp</span><span class="o">.</span><span class="n">status</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="n">get_selector</span><span class="p">()</span>
+        <span class="n">status</span> <span class="o">=</span> <span class="n">resp</span><span class="o">.</span><span class="n">code</span>
+
+    <span class="n">_track_dependency</span><span class="p">(</span><span class="n">tc</span><span class="p">,</span> <span class="n">always_flush</span><span class="p">,</span> <span class="n">req</span><span class="o">.</span><span class="n">host</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">duration</span><span class="p">,</span> <span class="n">status</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">__enable_for_urllib</span><span class="p">(</span><span class="n">base_http_handler_class</span><span class="p">,</span> <span class="n">base_https_handler_class</span><span class="p">,</span> <span class="n">instrumentation_key</span><span class="p">,</span> <span class="n">telemetry_channel</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                        <span class="n">always_flush</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">pass</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">instrumentation_key</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;Instrumentation key was required but not provided&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">telemetry_channel</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">sender</span> <span class="o">=</span> <span class="n">SynchronousSender</span><span class="p">()</span>
+        <span class="n">queue</span> <span class="o">=</span> <span class="n">SynchronousQueue</span><span class="p">(</span><span class="n">sender</span><span class="p">)</span>
+        <span class="n">telemetry_channel</span> <span class="o">=</span> <span class="n">TelemetryChannel</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">queue</span><span class="p">)</span>
+
+    <span class="n">client</span> <span class="o">=</span> <span class="n">TelemetryClient</span><span class="p">(</span><span class="n">instrumentation_key</span><span class="p">,</span> <span class="n">telemetry_channel</span><span class="p">)</span>
+
+    <span class="k">class</span> <span class="nc">AppInsightsHTTPHandler</span><span class="p">(</span><span class="n">base_http_handler_class</span><span class="p">,</span> <span class="nb">object</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">http_open</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">req</span><span class="p">):</span>
+            <span class="n">start_time</span> <span class="o">=</span> <span class="n">current_milli_time</span><span class="p">()</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">AppInsightsHTTPHandler</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">http_open</span><span class="p">(</span><span class="n">req</span><span class="p">)</span>
+
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">_track_for_urllib</span><span class="p">(</span><span class="n">client</span><span class="p">,</span> <span class="n">always_flush</span><span class="p">,</span> <span class="n">start_time</span><span class="p">,</span> <span class="n">req</span><span class="p">,</span> <span class="n">response</span><span class="p">)</span>
+            <span class="k">finally</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">response</span>
+
+    <span class="k">class</span> <span class="nc">AppInsightsHTTPSHandler</span><span class="p">(</span><span class="n">base_https_handler_class</span><span class="p">,</span> <span class="nb">object</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">https_open</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">req</span><span class="p">):</span>
+            <span class="n">start_time</span> <span class="o">=</span> <span class="n">current_milli_time</span><span class="p">()</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">AppInsightsHTTPSHandler</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">https_open</span><span class="p">(</span><span class="n">req</span><span class="p">)</span>
+
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">_track_for_urllib</span><span class="p">(</span><span class="n">client</span><span class="p">,</span> <span class="n">always_flush</span><span class="p">,</span> <span class="n">start_time</span><span class="p">,</span> <span class="n">req</span><span class="p">,</span> <span class="n">response</span><span class="p">)</span>
+            <span class="k">finally</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">response</span>
+
+    <span class="k">return</span> <span class="n">AppInsightsHTTPHandler</span><span class="p">,</span> <span class="n">AppInsightsHTTPSHandler</span>
+
+
+<div class="viewcode-block" id="enable_for_urllib"><a class="viewcode-back" href="../../../applicationinsights.client.html#applicationinsights.client.enable_for_urllib">[docs]</a><span class="k">def</span> <span class="nf">enable_for_urllib</span><span class="p">(</span><span class="n">instrumentation_key</span><span class="p">,</span> <span class="n">telemetry_channel</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">always_flush</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Enables the automatic collection of dependency telemetries for HTTP calls with urllib.</span>
+
+<span class="sd">    .. code:: python</span>
+
+<span class="sd">        from applicationinsights.client import enable_for_urllib</span>
+<span class="sd">        import urllib.requests</span>
+
+<span class="sd">        enable_for_urllib(&#39;&lt;YOUR INSTRUMENTATION KEY GOES HERE&gt;&#39;)</span>
+
+<span class="sd">        urllib.request.urlopen(&quot;https://www.python.org/&quot;)</span>
+<span class="sd">        # a dependency telemetry will be sent to the Application Insights service</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        instrumentation_key (str). the instrumentation key to use while sending telemetry to the service.</span>
+<span class="sd">        telemetry_channel (TelemetryChannel). a custom telemetry channel to use</span>
+<span class="sd">        always_flush (bool). if true every HTTP call will flush the dependency telemetry</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">urllib.request</span>
+
+    <span class="n">http_handler</span><span class="p">,</span> <span class="n">https_handler</span> <span class="o">=</span> <span class="n">__enable_for_urllib</span><span class="p">(</span>
+        <span class="n">urllib</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">HTTPHandler</span><span class="p">,</span>
+        <span class="n">urllib</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">HTTPSHandler</span><span class="p">,</span>
+        <span class="n">instrumentation_key</span><span class="p">,</span>
+        <span class="n">telemetry_channel</span><span class="p">,</span>
+        <span class="n">always_flush</span>
+    <span class="p">)</span>
+
+    <span class="n">urllib</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">install_opener</span><span class="p">(</span>
+        <span class="n">urllib</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">build_opener</span><span class="p">(</span><span class="n">http_handler</span><span class="p">,</span> <span class="n">https_handler</span><span class="p">)</span>
+    <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="enable_for_urllib2"><a class="viewcode-back" href="../../../applicationinsights.client.html#applicationinsights.client.enable_for_urllib2">[docs]</a><span class="k">def</span> <span class="nf">enable_for_urllib2</span><span class="p">(</span><span class="n">instrumentation_key</span><span class="p">,</span> <span class="n">telemetry_channel</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">always_flush</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Enables the automatic collection of dependency telemetries for HTTP calls with urllib2.</span>
+
+<span class="sd">    .. code:: python</span>
+
+<span class="sd">        from applicationinsights.client import enable_for_urllib2</span>
+<span class="sd">        import urllib2</span>
+
+<span class="sd">        enable_for_urllib2(&#39;&lt;YOUR INSTRUMENTATION KEY GOES HERE&gt;&#39;)</span>
+
+<span class="sd">        urllib2.urlopen(&quot;https://www.python.org/&quot;)</span>
+<span class="sd">        # a dependency telemetry will be sent to the Application Insights service</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        instrumentation_key (str). the instrumentation key to use while sending telemetry to the service.</span>
+<span class="sd">        telemetry_channel (TelemetryChannel). a custom telemetry channel to use</span>
+<span class="sd">        always_flush (bool). if true every HTTP call will flush the dependency telemetry</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">urllib2</span>
+
+    <span class="n">http_handler</span><span class="p">,</span> <span class="n">https_handler</span> <span class="o">=</span> <span class="n">__enable_for_urllib</span><span class="p">(</span>
+        <span class="n">urllib2</span><span class="o">.</span><span class="n">HTTPHandler</span><span class="p">,</span>
+        <span class="n">urllib2</span><span class="o">.</span><span class="n">HTTPSHandler</span><span class="p">,</span>
+        <span class="n">instrumentation_key</span><span class="p">,</span>
+        <span class="n">telemetry_channel</span><span class="p">,</span>
+        <span class="n">always_flush</span>
+    <span class="p">)</span>
+    <span class="n">urllib2</span><span class="o">.</span><span class="n">install_opener</span><span class="p">(</span>
+        <span class="n">urllib2</span><span class="o">.</span><span class="n">build_opener</span><span class="p">(</span><span class="n">http_handler</span><span class="p">,</span> <span class="n">https_handler</span><span class="p">)</span>
+    <span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Application Insights SDK for Python 0.12.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Max Brenner.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.3.
+    </div>
+  </body>
+</html>

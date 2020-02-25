@@ -11,11 +11,11 @@
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/overrides.css" type="text/css" />
     
-    <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
-    <script type="text/javascript" src="../../../_static/jquery.js"></script>
-    <script type="text/javascript" src="../../../_static/underscore.js"></script>
-    <script type="text/javascript" src="../../../_static/doctools.js"></script>
-    <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    <script id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/language_data.js"></script>
     
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
@@ -49,6 +49,8 @@
     <span class="kn">from</span> <span class="nn">urllib.error</span> <span class="kn">import</span> <span class="n">HTTPError</span>
 
 <span class="n">DEFAULT_ENDPOINT_URL</span> <span class="o">=</span> <span class="s1">&#39;https://dc.services.visualstudio.com/v2/track&#39;</span>
+
+<span class="n">default_openers</span> <span class="o">=</span> <span class="n">HTTPClient</span><span class="o">.</span><span class="n">_opener</span>
 
 
 <div class="viewcode-block" id="SenderBase"><a class="viewcode-back" href="../../../applicationinsights.channel.html#applicationinsights.channel.SenderBase">[docs]</a><span class="k">class</span> <span class="nc">SenderBase</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
@@ -174,7 +176,13 @@
 
         <span class="n">request</span> <span class="o">=</span> <span class="n">HTTPClient</span><span class="o">.</span><span class="n">Request</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_service_endpoint_uri</span><span class="p">,</span> <span class="nb">bytearray</span><span class="p">(</span>
             <span class="n">request_payload</span><span class="p">,</span> <span class="s1">&#39;utf-8&#39;</span><span class="p">),</span> <span class="p">{</span><span class="s1">&#39;Accept&#39;</span><span class="p">:</span> <span class="s1">&#39;application/json&#39;</span><span class="p">,</span> <span class="s1">&#39;Content-Type&#39;</span><span class="p">:</span> <span class="s1">&#39;application/json; charset=utf-8&#39;</span><span class="p">})</span>
+
+        <span class="n">current_opener</span> <span class="o">=</span> <span class="n">HTTPClient</span><span class="o">.</span><span class="n">_opener</span>
+
         <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># we need to set the default urllib openers here</span>
+            <span class="c1"># otherwise we would intercept the HTTP calls to Application Insights and create dependency telemetry for them as well</span>
+            <span class="n">HTTPClient</span><span class="o">.</span><span class="n">_opener</span> <span class="o">=</span> <span class="n">default_openers</span>
             <span class="n">response</span> <span class="o">=</span> <span class="n">HTTPClient</span><span class="o">.</span><span class="n">urlopen</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_timeout</span><span class="p">)</span>
             <span class="n">status_code</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">getcode</span><span class="p">()</span>
             <span class="k">if</span> <span class="mi">200</span> <span class="o">&lt;=</span> <span class="n">status_code</span> <span class="o">&lt;</span> <span class="mi">300</span><span class="p">:</span>
@@ -184,6 +192,8 @@
                 <span class="k">return</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">pass</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="n">HTTPClient</span><span class="o">.</span><span class="n">_opener</span> <span class="o">=</span> <span class="n">current_opener</span>
 
         <span class="c1"># Add our unsent data back on to the queue</span>
         <span class="k">for</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">data_to_send</span><span class="p">:</span>
@@ -204,7 +214,7 @@
     </form>
     </div>
 </div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+<script>$('#searchbox').show(0);</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -221,7 +231,7 @@
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2020, Max Brenner.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.3.1.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.3.
     </div>
   </body>
 </html>
