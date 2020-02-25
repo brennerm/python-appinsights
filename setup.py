@@ -14,7 +14,7 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # http://packaging.python.org/en/latest/tutorial.html#version
-    version='0.11.14',
+    version='0.12.0',
 
     description='This project extends the Application Insights API surface to support Python.',
     long_description=long_description,
@@ -62,6 +62,12 @@ setup(
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages().
     packages=find_packages(exclude=['contrib', 'docs', 'tests*']),
+    extras_require={
+       "requests-client": ["requests"],
+       "urllib3-client": ["urllib3"]
+    },
+
+    tests_require=["httpretty", "requests", "urllib3"],
 
     test_suite='tests.applicationinsights_tests'
 )
