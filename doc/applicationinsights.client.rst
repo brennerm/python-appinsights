@@ -2,7 +2,7 @@
     :maxdepth: 2
     :hidden:
 
-applicationinsights.exceptions module
+applicationinsights.client module
 =====================================
 
 enable function
