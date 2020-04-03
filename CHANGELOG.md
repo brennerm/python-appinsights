@@ -1,4 +1,6 @@
 # Changelog
+## 0.13.0
+- Add support for the Bottle web framework
 
 ## 0.12.0
 - Add HTTP client interceptors for urllib, urllib2, urllib3 and requests that automatically track dependencies
