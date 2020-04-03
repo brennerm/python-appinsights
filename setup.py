@@ -67,8 +67,6 @@ setup(
        "urllib3-client": ["urllib3"]
     },
 
-    tests_require=["httpretty", "requests", "urllib3"],
-
     test_suite='tests.applicationinsights_tests'
 )
 

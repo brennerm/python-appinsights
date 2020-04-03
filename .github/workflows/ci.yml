@@ -23,5 +23,6 @@ jobs:
     - name: Execute tests
       run: |
         pip install pytest
+        pip install -r requirements-test.txt
         pytest
         django_tests/all_tests.sh
