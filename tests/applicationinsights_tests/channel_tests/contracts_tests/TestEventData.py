@@ -1,4 +1,4 @@
-from .Utils import TestJsonEncoder
+from .Utils import JsonEncoder
 from applicationinsights.channel.contracts import *
 import unittest
 import datetime
@@ -61,6 +61,6 @@ class TestEventData(unittest.TestCase):
         for key, value in {'key1': 3.1415, 'key2': 42.2}.items():
             item.measurements[key] = value
         actual = json.dumps(item.write(), separators=(
-            ',', ':'), cls=TestJsonEncoder)
+            ',', ':'), cls=JsonEncoder)
         expected = '{"ver":42,"name":"Test string","properties":{"key1":"test value 1","key2":"test value 2"},"measurements":{"key1":3.1415,"key2":42.2}}'
         self.assertEqual(expected, actual)

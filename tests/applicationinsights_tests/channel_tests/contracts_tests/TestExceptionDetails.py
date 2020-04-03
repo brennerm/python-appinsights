@@ -1,4 +1,4 @@
-from .Utils import TestJsonEncoder
+from .Utils import JsonEncoder
 from applicationinsights.channel.contracts import *
 import unittest
 import datetime
@@ -103,6 +103,6 @@ class TestExceptionDetails(unittest.TestCase):
             item.parsed_stack.append(value)
 
         actual = json.dumps(item.write(), separators=(
-            ',', ':'), cls=TestJsonEncoder)
+            ',', ':'), cls=JsonEncoder)
         expected = '{"id":42,"outerId":42,"typeName":"Test string","message":"Test string","hasFullStack":true,"stack":"Test string","parsedStack":[{}]}'
         self.assertEqual(expected, actual)

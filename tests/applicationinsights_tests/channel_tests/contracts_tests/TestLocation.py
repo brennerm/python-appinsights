@@ -1,4 +1,4 @@
-from .Utils import TestJsonEncoder
+from .Utils import JsonEncoder
 from applicationinsights.channel.contracts import *
 import unittest
 import datetime
@@ -35,6 +35,6 @@ class TestLocation(unittest.TestCase):
         item = Location()
         item.ip = 'Test string'
         actual = json.dumps(item.write(), separators=(
-            ',', ':'), cls=TestJsonEncoder)
+            ',', ':'), cls=JsonEncoder)
         expected = '{"ai.location.ip":"Test string"}'
         self.assertEqual(expected, actual)

@@ -1,4 +1,4 @@
-from .Utils import TestJsonEncoder
+from .Utils import JsonEncoder
 from applicationinsights.channel.contracts import *
 import unittest
 import datetime
@@ -47,6 +47,6 @@ class TestData(unittest.TestCase):
         item.base_type = 'Test string'
         item.base_data = object()
         actual = json.dumps(item.write(), separators=(
-            ',', ':'), cls=TestJsonEncoder)
+            ',', ':'), cls=JsonEncoder)
         expected = '{"baseType":"Test string","baseData":{}}'
         self.assertEqual(expected, actual)

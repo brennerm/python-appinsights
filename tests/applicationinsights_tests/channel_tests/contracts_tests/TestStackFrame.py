@@ -1,4 +1,4 @@
-from .Utils import TestJsonEncoder
+from .Utils import JsonEncoder
 from applicationinsights.channel.contracts import *
 import unittest
 import json
@@ -79,6 +79,6 @@ class TestStackFrame(unittest.TestCase):
         item.file_name = 'Test string'
         item.line = 42
         actual = json.dumps(item.write(), separators=(
-            ',', ':'), cls=TestJsonEncoder)
+            ',', ':'), cls=JsonEncoder)
         expected = '{"level":42,"method":"Test string","assembly":"Test string","fileName":"Test string","line":42}'
         self.assertEqual(expected, actual)

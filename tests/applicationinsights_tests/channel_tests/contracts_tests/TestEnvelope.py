@@ -1,4 +1,4 @@
-from .Utils import TestJsonEncoder
+from .Utils import JsonEncoder
 from applicationinsights.channel.contracts import Envelope
 import unittest
 import datetime
@@ -191,6 +191,6 @@ class TestEnvelope(unittest.TestCase):
             item.tags[key] = value
         item.data = object()
         actual = json.dumps(item.write(), separators=(
-            ',', ':'), cls=TestJsonEncoder)
+            ',', ':'), cls=JsonEncoder)
         expected = '{"ver":42,"name":"Test string","time":"Test string","sampleRate":1.5,"seq":"Test string","iKey":"Test string","tags":{"key1":"test value 1","key2":"test value 2"},"data":{}}'
         self.assertEqual(expected, actual)

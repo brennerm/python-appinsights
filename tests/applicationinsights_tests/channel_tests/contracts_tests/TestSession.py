@@ -1,4 +1,4 @@
-from .Utils import TestJsonEncoder
+from .Utils import JsonEncoder
 from applicationinsights.channel.contracts import Session
 import unittest
 import datetime
@@ -58,6 +58,6 @@ class TestSession(unittest.TestCase):
         item.id = 'Test string'
         item.is_first = 'Test string'
         actual = json.dumps(item.write(), separators=(
-            ',', ':'), cls=TestJsonEncoder)
+            ',', ':'), cls=JsonEncoder)
         expected = '{"ai.session.id":"Test string","ai.session.isFirst":"Test string"}'
         self.assertEqual(expected, actual)

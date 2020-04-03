@@ -1,4 +1,4 @@
-from .Utils import TestJsonEncoder
+from .Utils import JsonEncoder
 from applicationinsights.channel.contracts import *
 import unittest
 import datetime
@@ -107,6 +107,6 @@ class TestDataPoint(unittest.TestCase):
         item.max = 1.5
         item.std_dev = 1.5
         actual = json.dumps(item.write(), separators=(
-            ',', ':'), cls=TestJsonEncoder)
+            ',', ':'), cls=JsonEncoder)
         expected = '{"name":"Test string","kind":{},"value":1.5,"count":42,"min":1.5,"max":1.5,"stdDev":1.5}'
         self.assertEqual(expected, actual)

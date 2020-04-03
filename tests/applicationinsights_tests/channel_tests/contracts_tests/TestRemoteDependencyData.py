@@ -1,4 +1,4 @@
-from .Utils import TestJsonEncoder
+from .Utils import JsonEncoder
 from applicationinsights.channel.contracts import RemoteDependencyData
 import unittest
 import json
@@ -154,6 +154,6 @@ class TestRemoteDependencyData(unittest.TestCase):
         for key, value in {'key1': 'test value 1', 'key2': 'test value 2'}.items():
             item.properties[key] = value
         actual = json.dumps(item.write(), separators=(
-            ',', ':'), cls=TestJsonEncoder)
+            ',', ':'), cls=JsonEncoder)
         expected = '{"ver":42,"name":"Test string","duration":1.5,"success":true,"type":"HTTP","properties":{"key1":"test value 1","key2":"test value 2"}}'
         self.assertEqual(expected, actual)

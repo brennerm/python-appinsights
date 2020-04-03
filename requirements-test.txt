@@ -1,0 +1,3 @@
+httpretty
+requests
+urllib3
