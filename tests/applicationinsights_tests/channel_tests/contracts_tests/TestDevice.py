@@ -1,4 +1,4 @@
-from .Utils import TestJsonEncoder
+from .Utils import JsonEncoder
 from applicationinsights.channel.contracts import Device
 import unittest
 import datetime
@@ -183,6 +183,6 @@ class TestDevice(unittest.TestCase):
         item.os_version = 'Test string'
         item.type = 'Test string'
         actual = json.dumps(item.write(), separators=(
-            ',', ':'), cls=TestJsonEncoder)
+            ',', ':'), cls=JsonEncoder)
         expected = '{"ai.device.id":"Test string","ai.device.locale":"Test string","ai.device.model":"Test string","ai.device.oemName":"Test string","ai.device.osVersion":"Test string","ai.device.type":"Test string"}'
         self.assertEqual(expected, actual)

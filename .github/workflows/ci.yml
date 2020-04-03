@@ -22,5 +22,6 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Execute tests
       run: |
-        python setup.py test
+        pip install pytest
+        pytest
         django_tests/all_tests.sh

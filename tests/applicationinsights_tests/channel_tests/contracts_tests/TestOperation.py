@@ -1,4 +1,4 @@
-from .Utils import TestJsonEncoder
+from .Utils import JsonEncoder
 from applicationinsights.channel.contracts import Operation
 import unittest
 import datetime
@@ -67,6 +67,6 @@ class TestOperation(unittest.TestCase):
         item.name = 'Test string'
         item.parent_id = 'Test string'
         actual = json.dumps(item.write(), separators=(
-            ',', ':'), cls=TestJsonEncoder)
+            ',', ':'), cls=JsonEncoder)
         expected = '{"ai.operation.id":"Test string","ai.operation.name":"Test string","ai.operation.parentId":"Test string"}'
         self.assertEqual(expected, actual)

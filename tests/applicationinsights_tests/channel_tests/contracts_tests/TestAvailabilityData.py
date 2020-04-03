@@ -1,4 +1,4 @@
-from .Utils import TestJsonEncoder
+from .Utils import JsonEncoder
 from applicationinsights.channel.contracts import AvailabilityData
 import unittest
 import json
@@ -104,6 +104,6 @@ class TestAvailabilityData(unittest.TestCase):
         for key, value in {'key1': 3.1415, 'key2': 42.2}.items():
             item.measurements[key] = value
         actual = json.dumps(item.write(), separators=(
-            ',', ':'), cls=TestJsonEncoder)
+            ',', ':'), cls=JsonEncoder)
         expected = '{"ver":42,"id":"Test string","name":"Test string","duration":"Test string","success":true,"properties":{"key1":"test value 1","key2":"test value 2"},"measurements":{"key1":3.1415,"key2":42.2}}'
         self.assertEqual(expected, actual)

@@ -1,4 +1,4 @@
-from .Utils import TestJsonEncoder
+from .Utils import JsonEncoder
 from applicationinsights.channel.contracts import ExceptionData, ExceptionDetails
 import unittest
 import datetime
@@ -81,6 +81,6 @@ class TestExceptionData(unittest.TestCase):
         for key, value in {'key1': 3.1415, 'key2': 42.2}.items():
             item.measurements[key] = value
         actual = json.dumps(item.write(), separators=(
-            ',', ':'), cls=TestJsonEncoder)
+            ',', ':'), cls=JsonEncoder)
         expected = '{"ver":42,"exceptions":[{}],"severityLevel":{},"properties":{"key1":"test value 1","key2":"test value 2"},"measurements":{"key1":3.1415,"key2":42.2}}'
         self.assertEqual(expected, actual)
