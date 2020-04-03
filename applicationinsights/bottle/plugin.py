@@ -37,7 +37,7 @@ class AppInsights(object):
       endpoint to which Application Insights will send the telemetry.
 
     - Set ``APPINSIGHTS_DISABLE_REQUEST_LOGGING`` to ``False`` to disable
-      logging of Flask requests to Application Insights.
+      logging of Bottle requests to Application Insights.
 
     .. code:: python
 
